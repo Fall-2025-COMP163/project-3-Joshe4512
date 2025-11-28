@@ -201,4 +201,4 @@ def add_gold(character, amount):
     return new_total
 
 
-def heal_character(character, amount)_
+def heal_character(character, amount):
