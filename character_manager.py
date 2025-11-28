@@ -202,3 +202,63 @@ def add_gold(character, amount):
 
 
 def heal_character(character, amount):
+    old_hp = character["health"]
+    character["health"] = min(character["health"] + amount, character["max_health"])
+    return character["health"] - old_hp
+
+
+def is_character_dead(character):
+    return character["health"] <= 0
+
+
+def revive_character(character):
+    if character["health"] > 0:
+        return False
+    character["health"] = character["max_health"] // 2
+    return True
+
+# ============================================================================
+# VALIDATION
+# ============================================================================
+
+def validate_character_data(character):
+    required = [
+        "name", "class", "level", "health", "max_health",
+        "strength", "magic", "experience", "gold",
+        "inventory", "active_quests", "completed_quests"
+    ]
+
+    for key in required:
+        if key not in character:
+            raise InvalidSaveDataError(f"Missing field: {key}")
+
+    numeric_fields = [
+        "level", "health", "max_health", "strength",
+        "magic", "experience", "gold"
+    ]
+
+    for key in numeric_fields:
+        if not isinstance(character[key], (int, float)):
+            raise InvalidSaveDataError(f"{key} must be numeric")
+
+    list_fields = ["inventory", "active_quests", "completed_quests"]
+
+    for key in list_fields:
+        if not isinstance(character[key], list):
+            raise InvalidSaveDataError(f"{key} must be a list")
+
+    return True
+
+
+# ============================================================================
+# TESTING
+# ============================================================================
+
+if __name__ == "__main__":
+    print("=== CHARACTER MANAGER TEST ===")
+
+    # Example test character
+    c = create_character("TestHero", "Warrior")
+    save_character(c)
+    loaded = load_character("TestHero")
+    print("Loaded character:", loaded)
