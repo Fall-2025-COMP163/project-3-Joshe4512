@@ -11,27 +11,45 @@ from custom_exceptions import (
     MissingDataFileError,
     CorruptedDataError
 )
+# imports the os module  which allows file and folder operations like os.path.exists or os.makedirs and imports custom exceptions already made.
 
 # ============================================================================
 # DATA LOADING FUNCTIONS
 # ============================================================================
 
-def load_quests(filename="data/quests.txt"):
+def load_quests(filename="data/quests.txt"): #Defines load_quests and shows the default file location if no tests pass)
     """Load quests from file and return dict."""
     if not os.path.exists(filename):
         raise MissingDataFileError("Quest data file missing")
+        # Loop that checks if the file exists and if it the file doesnt exists it raises the custom "MissingDataFileError."
 
     try:
         with open(filename, "r") as f:
             raw = f.read().strip()
     except Exception:
         raise CorruptedDataError("Quest file unreadable")
+        # Opens the file safely using with (automatically closes the file).
+
+        # Reads all lines and splits them into a list of strings.
+
+        # If reading fails (permissions, encoding errors), raises CorruptedDataError.
 
     if not raw:
         raise InvalidDataFormatError("Quest file empty")
 
     blocks = [b.strip().split("\n") for b in raw.split("\n\n") if b.strip()]
-    quests = {}
+    quests = {} #initializes an empty directory to store quests 
+#block collects lines for one quest.
+
+#Loops over each line:
+
+#If line is blank (""), it means one quest finished.
+
+#Sends block to parse_quest_block to turn it into a dictionary.
+
+#Adds the quest to the quests dictionary with the key quest_id.
+
+#Non-blank lines are added to the block.
 
     for block in blocks:
         quest_dict = parse_quest_block(block)
