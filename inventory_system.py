@@ -2,9 +2,18 @@
 COMP 163 - Project 3: Quest Chronicles
 Inventory System Module - Completed Code
 
-Name: [Your Name Here]
+Name: [Joshua Evans]
 AI Usage: Assisted in completing TODO functions
 """
+
+from custom_exceptions import (
+    InventoryFullError,
+    ItemNotFoundError,
+    InsufficientResourcesError,
+    InvalidItemTypeError
+)
+
+MAX_INVENTORY_SIZE = 20
 
 from custom_exceptions import (
     InventoryFullError,
@@ -53,65 +62,59 @@ def use_item(character, item_id, item_data):
     if item_id not in character["inventory"]:
         raise ItemNotFoundError("Item not in inventory")
 
-    item = item_data[item_id]
-    if item["type"] != "consumable":
-        raise InvalidItemTypeError("Item is not usable (must be consumable)")
+    if "type" not in item_data or "effect" not in item_data:
+        raise InvalidItemTypeError("Item data is invalid")
 
-    stat, value = parse_item_effect(item["effect"])
+    if item_data["type"] != "consumable":
+        raise InvalidItemTypeError("Item is not consumable")
+
+    stat, value = parse_item_effect(item_data["effect"])
     apply_stat_effect(character, stat, value)
 
     character["inventory"].remove(item_id)
-    return f"Used {item['name']} and gained {stat} +{value}"
+    return f"Used {item_data.get('name', item_id)} and gained {stat} +{value}"
 
 def equip_weapon(character, item_id, item_data):
     if item_id not in character["inventory"]:
         raise ItemNotFoundError("Item not in inventory")
-
-    item = item_data[item_id]
-    if item["type"] != "weapon":
+    if item_data["type"] != "weapon":
         raise InvalidItemTypeError("Item is not a weapon")
 
-    # Unequip old
     if character.get("equipped_weapon"):
         unequip_weapon(character)
 
-    stat, value = parse_item_effect(item["effect"])
+    stat, value = parse_item_effect(item_data["effect"])
     character[stat] += value
 
     character["equipped_weapon"] = item_id
     character["inventory"].remove(item_id)
 
-    return f"Equipped weapon {item['name']} (+{value} {stat})"
+    return f"Equipped weapon {item_data.get('name', item_id)} (+{value} {stat})"
 
 def equip_armor(character, item_id, item_data):
     if item_id not in character["inventory"]:
         raise ItemNotFoundError("Item not in inventory")
-
-    item = item_data[item_id]
-    if item["type"] != "armor":
+    if item_data["type"] != "armor":
         raise InvalidItemTypeError("Item is not armor")
 
-    # Unequip old
     if character.get("equipped_armor"):
         unequip_armor(character)
 
-    stat, value = parse_item_effect(item["effect"])
+    stat, value = parse_item_effect(item_data["effect"])
     character[stat] += value
 
     character["equipped_armor"] = item_id
     character["inventory"].remove(item_id)
 
-    # If max health increased, do not heal
     if stat == "max_health" and character["health"] > character["max_health"]:
         character["health"] = character["max_health"]
 
-    return f"Equipped armor {item['name']} (+{value} {stat})"
+    return f"Equipped armor {item_data.get('name', item_id)} (+{value} {stat})"
 
 def unequip_weapon(character):
     weapon = character.get("equipped_weapon")
     if weapon is None:
         return None
-
     if len(character["inventory"]) >= MAX_INVENTORY_SIZE:
         raise InventoryFullError("Inventory full; cannot unequip")
 
@@ -129,7 +132,6 @@ def unequip_armor(character):
     armor = character.get("equipped_armor")
     if armor is None:
         return None
-
     if len(character["inventory"]) >= MAX_INVENTORY_SIZE:
         raise InventoryFullError("Inventory full; cannot unequip")
 
@@ -138,8 +140,6 @@ def unequip_armor(character):
     stat, value = parse_item_effect(item_effect)
 
     character[stat] -= value
-
-    # Ensure health never exceeds max_health after removing armor buffs
     if stat == "max_health" and character["health"] > character["max_health"]:
         character["health"] = character["max_health"]
 
@@ -153,30 +153,28 @@ def unequip_armor(character):
 # ============================================================================
 
 def purchase_item(character, item_id, item_data):
-    cost = item_data[item_id]["cost"]
+    if "cost" not in item_data:
+        raise InvalidItemTypeError("Item data missing cost")
 
+    cost = item_data["cost"]
     if character["gold"] < cost:
         raise InsufficientResourcesError("Not enough gold")
-
     if len(character["inventory"]) >= MAX_INVENTORY_SIZE:
         raise InventoryFullError("Inventory is full")
 
     character["gold"] -= cost
     character["inventory"].append(item_id)
-
     return True
 
 def sell_item(character, item_id, item_data):
     if item_id not in character["inventory"]:
         raise ItemNotFoundError("Item not found")
 
-    sell_price = item_data[item_id]["cost"] // 2
-
+    sell_price = item_data["cost"] // 2
     character["inventory"].remove(item_id)
     character["gold"] += sell_price
 
     return sell_price
-
 
 # ============================================================================
 # HELPER FUNCTIONS
@@ -188,14 +186,11 @@ def parse_item_effect(effect_string):
 
 def apply_stat_effect(character, stat_name, value):
     character[stat_name] += value
-
-    if stat_name == "health":
-        if character["health"] > character["max_health"]:
-            character["health"] = character["max_health"]
+    if stat_name == "health" and character["health"] > character["max_health"]:
+        character["health"] = character["max_health"]
 
 def display_inventory(character, item_data_dict):
     counts = {}
-
     for item_id in character["inventory"]:
         counts[item_id] = counts.get(item_id, 0) + 1
 
@@ -205,8 +200,9 @@ def display_inventory(character, item_data_dict):
         return
 
     for item_id, qty in counts.items():
-        item = item_data_dict[item_id]
+        item = item_data_dict.get(item_id, {"name": item_id, "type": "unknown"})
         print(f"{item['name']} ({item['type']}) x{qty}")
+
     
 # ============================================================================
 # TESTING
