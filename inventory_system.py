@@ -14,16 +14,7 @@ from custom_exceptions import (
 )
 
 MAX_INVENTORY_SIZE = 20
-
-from custom_exceptions import (
-    InventoryFullError,
-    ItemNotFoundError,
-    InsufficientResourcesError,
-    InvalidItemTypeError
-)
-
-MAX_INVENTORY_SIZE = 20
-
+# defines what the max inventory size should be.
 # ============================================================================
 # INVENTORY MANAGEMENT
 # ============================================================================
@@ -33,6 +24,7 @@ def add_item_to_inventory(character, item_id):
         raise InventoryFullError("Inventory is full")
     character["inventory"].append(item_id)
     return True
+#
 
 def remove_item_from_inventory(character, item_id):
     if item_id not in character["inventory"]:
