@@ -98,7 +98,8 @@ class SimpleBattle:
         if result is not None:
             self.combat_active = False
             winner = result
-            break
+            break 
+        
 
             self.enemy_turn()
             self.turn += 1
