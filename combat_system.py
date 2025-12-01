@@ -57,7 +57,7 @@ def create_enemy(enemy_type):
     if enemy_type not in types:
         raise InvalidTargetError(f"Unknown enemy type: {enemy_type}")
 
-    return types[enemy_type].copy()
+    return types[enemy_type].copy() #returns the type of enemy and copies it to a new dictionary 
 
 
 def get_random_enemy_for_level(character_level):
@@ -76,7 +76,7 @@ def get_random_enemy_for_level(character_level):
 
 class SimpleBattle:
     """Turn-based combat manager."""
-    
+   # Initializes the battle instance with the player, enemy, and starting values.
     def __init__(self, character, enemy):
         self.character = character
         self.enemy = enemy
@@ -94,18 +94,13 @@ class SimpleBattle:
             display_battle_log(f"--- Turn {self.turn} ---")
             self.player_turn()
 
-            if (result := self.check_battle_end()) is not None:
-                self.combat_active = False
-                winner = result
-                break
+        result = self.check_battle_end()
+        if result is not None:
+            self.combat_active = False
+            winner = result
+            break
 
             self.enemy_turn()
-
-            if (result := self.check_battle_end()) is not None:
-                self.combat_active = False
-                winner = result
-                break
-
             self.turn += 1
 
         if winner == "player":
