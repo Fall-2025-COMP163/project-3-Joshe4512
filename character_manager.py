@@ -37,7 +37,7 @@ def create_character(name, character_class):
     if character_class not in valid_classes:
         raise InvalidCharacterClassError(
             f"Invalid class '{character_class}'. "
-            f"Valid classes: {', '.join(valid_classes.keys())}"
+            f"Valid classes: {', '.join(valid_classes.keys())}" #takes all the valid classes from the dictionary and joins them, Python is looking for a comma to separate each value.
         )
 
     base = valid_classes[character_class]  # select base stats
@@ -68,11 +68,11 @@ def save_character(character, save_directory="data/save_games"):
     """
 
     # Ensure save directory exists
-    os.makedirs(save_directory, exist_ok=True)
+    os.makedirs(save_directory, exist_ok=True) #os.makedirs creates directories. python creaates the folder and the parent folders if needed.
 
     # Build the file path
     filename = f"{character['name']}_save.txt"
-    filepath = os.path.join(save_directory, filename)
+    filepath = os.path.join(save_directory, filename) #os.path.join-> joins paths depending on what OS you are on.
 
     # Convert lists into comma-separated strings
     inventory_str = ",".join(character["inventory"])
@@ -269,14 +269,14 @@ def validate_character_data(character):
     ]
 
     for key in numeric_fields:
-        if not isinstance(character[key], (int, float)):
+        if not isinstance(character[key], (int, float)): #checks if the character[key] is not an int and also checks if its not a float.
             raise InvalidSaveDataError(f"{key} must be numeric")
 
     # Fields that must be lists
     list_fields = ["inventory", "active_quests", "completed_quests"]
 
     for key in list_fields:
-        if not isinstance(character[key], list):
+        if not isinstance(character[key], list): #checks if the character[key] is not a list
             raise InvalidSaveDataError(f"{key} must be a list")
 
     return True
