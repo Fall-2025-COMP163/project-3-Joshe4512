@@ -163,4 +163,142 @@ def load_character(character_name, save_directory="data/save_games"):
     validate_character_data(character)
     return character
 
-# =================
+# ============================================================================
+# SAVE FILE UTILITIES
+# ============================================================================
+
+def list_saved_characters(save_directory="data/save_games"):
+    """
+    Return list of saved character names (without _save.txt)
+    """
+
+    # If no directory exists, nothing is saved
+    if not os.path.exists(save_directory):
+        return []
+
+    names = []
+    # Go through all save files and strip "_save.txt"
+    for filename in os.listdir(save_directory):
+        if filename.endswith("_save.txt"):
+            names.append(filename[:-9])  # remove suffix
+
+    return names
+
+
+def delete_character(character_name, save_directory="data/save_games"):
+    """
+    Delete a character's save file.
+    """
+
+    filepath = os.path.join(save_directory, f"{character_name}_save.txt")
+
+    # File must exist to delete it
+    if not os.path.exists(filepath):
+        raise CharacterNotFoundError(f"'{character_name}' does not exist.")
+
+    os.remove(filepath)
+    return True
+
+# ============================================================================
+# CHARACTER OPERATIONS
+# ============================================================================
+
+def gain_experience(character, xp_amount):
+    # Prevent gaining XP while dead
+    if character["health"] <= 0:
+        raise CharacterDeadError("Dead characters cannot gain XP.")
+
+    character["experience"] += xp_amount  # add XP
+
+    # Perform level-ups (can happen multiple times)
+    while character["experience"] >= character["level"] * 100:
+        character["experience"] -= character["level"] * 100
+        character["level"] += 1
+
+        # Increase stats when leveling
+        character["max_health"] += 10
+        character["strength"] += 2
+        character["magic"] += 2
+
+        # Restore HP to full
+        character["health"] = character["max_health"]
+
+
+def add_gold(character, amount):
+    # Prevent gold from going negative
+    new_total = character["gold"] + amount
+    if new_total < 0:
+        raise ValueError("Not enough gold.")
+
+    character["gold"] = new_total
+    return new_total
+
+
+def heal_character(character, amount):
+    # Store the old HP to return how much was healed
+    old_hp = character["health"]
+    character["health"] = min(character["health"] + amount, character["max_health"])
+    return character["health"] - old_hp
+
+
+def is_character_dead(character):
+    # Dead if health is 0 or lower
+    return character["health"] <= 0
+
+
+def revive_character(character):
+    # Cannot revive someone already alive
+    if character["health"] > 0:
+        return False
+
+    # Bring back with half HP
+    character["health"] = character["max_health"] // 2
+    return True
+
+# ============================================================================
+# VALIDATION
+# ============================================================================
+
+def validate_character_data(character):
+    # Required fields that must exist
+    required = [
+        "name", "class", "level", "health", "max_health",
+        "strength", "magic", "experience", "gold",
+        "inventory", "active_quests", "completed_quests"
+    ]
+
+    for key in required:
+        if key not in character:
+            raise InvalidSaveDataError(f"Missing field: {key}")
+
+    # Fields that must be numeric
+    numeric_fields = [
+        "level", "health", "max_health", "strength",
+        "magic", "experience", "gold"
+    ]
+
+    for key in numeric_fields:
+        if not isinstance(character[key], (int, float)): #checks if the character[key] is not an int and also checks if its not a float.
+            raise InvalidSaveDataError(f"{key} must be numeric")
+
+    # Fields that must be lists
+    list_fields = ["inventory", "active_quests", "completed_quests"]
+
+    for key in list_fields:
+        if not isinstance(character[key], list): #checks if the character[key] is not a list
+            raise InvalidSaveDataError(f"{key} must be a list")
+
+    return True
+
+# ============================================================================
+# TESTING
+# ============================================================================
+
+if __name__ == "__main__":
+    print("=== CHARACTER MANAGER TEST ===")
+
+    # Example test character
+    c = create_character("TestHero", "Warrior")
+    save_character(c)
+    loaded = load_character("TestHero")
+    print("Loaded character:", loaded)
